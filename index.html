@@ -1,0 +1,1407 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <!-- Embedded Web App Manifest for PWA Installation -->
+  <link rel="manifest" href='data:application/manifest+json;charset=utf-8,{"name":"Juna-Aikataulut","short_name":"Juna-Aikataulut","description":"Suomen junien live-aikataulut","start_url":".","display":"standalone","orientation":"portrait","background_color":"%23090d16","theme_color":"%23090d16","icons":[{"src":"data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"%2300d2ff\"><path d=\"M12 2c-4 0-8 1-8 5v10c0 2.2 1.8 4 4 4l-2 2v1h12v-1l-2-2c2.2 0 4-1.8 4-4V7c0-4-4-5-8-5zm-4 16c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm8 0c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm2-7H6V7h12v4z\"/></svg>","sizes":"192x192 512x512","type":"image/svg+xml"}]}'>
+  <meta name="theme-color" content="#090d16">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Juna-Aikataulut — Live-aikataulut</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-dark: #090d16;
+      --bg-card: #131b2e;
+      --bg-card-hover: #1c2742;
+      --bg-input: #172036;
+      --primary: #00d2ff;
+      --primary-glow: rgba(0, 210, 255, 0.25);
+      --accent-vr: #00b956;
+      --accent-orange: #ff9f43;
+      --accent-red: #ff5252;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border-color: rgba(255, 255, 255, 0.08);
+      --radius-lg: 18px;
+      --radius-md: 12px;
+      --radius-sm: 8px;
+      --shadow-main: 0 10px 30px -5px rgba(0, 0, 0, 0.5);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      font-family: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-bottom: 40px;
+      overflow-x: hidden;
+    }
+
+    .app-container {
+      width: 100%;
+      max-width: 480px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* HEADER */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 4px 4px 4px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-icon {
+      width: 38px;
+      height: 38px;
+      background: linear-gradient(135deg, #00d2ff, #0055ff);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 14px var(--primary-glow);
+    }
+
+    .brand-icon svg {
+      width: 22px;
+      height: 22px;
+      fill: #ffffff;
+    }
+
+    .brand-text h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+      background: linear-gradient(135deg, #ffffff, #94a3b8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand-text p {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .refresh-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .refresh-btn:active {
+      transform: scale(0.92);
+      background: var(--bg-card-hover);
+    }
+
+    .refresh-btn svg {
+      width: 20px;
+      height: 20px;
+      fill: var(--primary);
+      transition: transform 0.5s ease;
+    }
+
+    .refresh-btn.spinning svg {
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    /* PRESET BUTTONS SECTION */
+    .section-title {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .presets-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .preset-card {
+      background: linear-gradient(145deg, var(--bg-card), #18223c);
+      border: 1.5px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 11px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .preset-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: transparent;
+      transition: background 0.25s;
+    }
+
+    .preset-card:active {
+      transform: translateY(2px) scale(0.98);
+    }
+
+    .preset-card.active {
+      border-color: rgba(0, 210, 255, 0.45);
+      box-shadow: 0 4px 14px rgba(0, 210, 255, 0.1);
+    }
+
+    .preset-card.active::before {
+      background: linear-gradient(90deg, rgba(0, 210, 255, 0.7), rgba(0, 85, 255, 0.7));
+      height: 3px;
+    }
+
+    .preset-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .preset-name {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .preset-code {
+      font-size: 0.7rem;
+      font-weight: 700;
+      background: rgba(255, 255, 255, 0.08);
+      padding: 2px 6px;
+      border-radius: var(--radius-sm);
+      color: var(--primary);
+    }
+
+    .preset-sub {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    /* SEARCH INPUT */
+    .search-box {
+      position: relative;
+    }
+
+    .search-input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      width: 16px;
+      height: 16px;
+      fill: var(--text-muted);
+      pointer-events: none;
+    }
+
+    .search-input {
+      width: 100%;
+      background: var(--bg-input);
+      border: 1.5px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 10px 36px 10px 36px;
+      font-size: 0.88rem;
+      color: var(--text-main);
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .search-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 16px var(--primary-glow);
+      background: #1c2742;
+    }
+
+    .clear-search-btn {
+      position: absolute;
+      right: 10px;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: var(--text-muted);
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 11px;
+    }
+
+    .clear-search-btn.visible {
+      display: flex;
+    }
+
+    /* AUTOCOMPLETE DROPDOWN */
+    .autocomplete-list {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      right: 0;
+      background: #17223b;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      max-height: 220px;
+      overflow-y: auto;
+      z-index: 100;
+      box-shadow: var(--shadow-main);
+      display: none;
+    }
+
+    .autocomplete-list.visible {
+      display: block;
+    }
+
+    .autocomplete-item {
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .autocomplete-item:last-child {
+      border-bottom: none;
+    }
+
+    .autocomplete-item:active, .autocomplete-item:hover {
+      background: rgba(0, 210, 255, 0.12);
+    }
+
+    .autocomplete-name {
+      font-size: 0.95rem;
+      font-weight: 500;
+    }
+
+    .autocomplete-code {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    /* CONTROLS & FILTER TABS */
+    .controls-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 4px;
+    }
+
+    .current-station-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.15rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .current-station-title span {
+      color: var(--primary);
+    }
+
+    .filter-tabs {
+      display: flex;
+      background: var(--bg-card);
+      padding: 3px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-color);
+    }
+
+    .filter-tab {
+      padding: 6px 10px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      border: none;
+      background: transparent;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .filter-tab.active {
+      background: var(--primary);
+      color: #000000;
+      font-weight: 700;
+    }
+
+    /* DEPARTURE LIST */
+    .departures-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .train-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .train-card:active {
+      transform: scale(0.98);
+      background: var(--bg-card-hover);
+    }
+
+    .train-card-main {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .train-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .line-badge {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 800;
+      font-size: 1.15rem;
+      color: #ffffff;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+      flex-shrink: 0;
+    }
+
+    /* Badge Themes */
+    .badge-commuter {
+      background: linear-gradient(135deg, #0088ff, #0055d4);
+    }
+    .badge-ic {
+      background: linear-gradient(135deg, #e11d48, #be123c);
+    }
+    .badge-pendolino {
+      background: linear-gradient(135deg, #059669, #047857);
+    }
+    .badge-other {
+      background: linear-gradient(135deg, #64748b, #475569);
+    }
+
+    .train-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .destination-name {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .train-meta-sub {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .track-pill {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-main);
+      padding: 2px 7px;
+      border-radius: var(--radius-sm);
+      font-weight: 600;
+      font-size: 0.72rem;
+    }
+
+    .train-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+    }
+
+    .departure-time {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .departure-time.delayed {
+      color: var(--accent-orange);
+      text-decoration: line-through;
+      font-size: 0.95rem;
+    }
+
+    .new-time {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--accent-orange);
+    }
+
+    .status-tag {
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .status-ontime {
+      background: rgba(0, 185, 86, 0.15);
+      color: #00e66b;
+      border: 1px solid rgba(0, 185, 86, 0.3);
+    }
+
+    .status-delayed {
+      background: rgba(255, 159, 67, 0.15);
+      color: var(--accent-orange);
+      border: 1px solid rgba(255, 159, 67, 0.3);
+    }
+
+    .status-cancelled {
+      background: rgba(255, 82, 82, 0.15);
+      color: var(--accent-red);
+      border: 1px solid rgba(255, 82, 82, 0.3);
+    }
+
+    .countdown-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      padding-top: 6px;
+      border-top: 1px dashed rgba(255, 255, 255, 0.08);
+    }
+
+    .countdown-pill {
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    /* EMPTY / LOADING STATE */
+    .loading-state, .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      border: 1px dashed var(--border-color);
+      color: var(--text-muted);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid rgba(0, 210, 255, 0.2);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    /* ROUTE FULL PAGE VIEW */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
+      background: var(--bg-dark);
+      z-index: 999;
+      display: none;
+      overflow: hidden;
+    }
+
+    .modal-overlay.visible {
+      display: flex;
+      justify-content: center;
+    }
+
+    .modal-content {
+      background: var(--bg-dark);
+      width: 100%;
+      max-width: 480px;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      padding: 16px;
+      gap: 16px;
+      animation: slideInRight 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: none;
+      border: none;
+      overflow: hidden;
+    }
+
+    @keyframes slideInRight {
+      from { transform: translateX(100%); }
+      to { transform: translateX(0); }
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .modal-back-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 8px 14px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .modal-back-btn:active {
+      transform: scale(0.95);
+      background: var(--bg-card-hover);
+    }
+
+    .modal-title-group {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+    }
+
+    .modal-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .modal-subtitle {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .close-modal-btn {
+      display: none;
+    }
+
+    .timeline {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      padding: 12px 6px 40px 6px;
+      max-height: none;
+    }
+
+    .timeline-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      position: relative;
+      padding-bottom: 20px;
+    }
+
+    .timeline-item:last-child {
+      padding-bottom: 0;
+    }
+
+    .timeline-item:last-child::after {
+      display: none;
+    }
+
+    .timeline-item::after {
+      content: '';
+      position: absolute;
+      left: 11px;
+      top: 24px;
+      bottom: 0;
+      width: 2px;
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    .timeline-item.active-leg::after {
+      background: #33daff;
+      width: 3px;
+      left: 10.5px;
+      box-shadow: 0 0 8px rgba(51, 218, 255, 0.4);
+    }
+
+    .timeline-dot {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--bg-card);
+      border: 2px solid var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2;
+      flex-shrink: 0;
+    }
+
+    .timeline-dot.current {
+      background: #55e3ff;
+      border-color: #ffffff;
+      box-shadow: 0 0 12px rgba(85, 227, 255, 0.8);
+      animation: pulseDot 1.5s infinite alternate;
+    }
+
+    @keyframes pulseDot {
+      from { transform: scale(1); box-shadow: 0 0 7px rgba(0, 210, 255, 0.6); }
+      to { transform: scale(1.08); box-shadow: 0 0 11px rgba(85, 227, 255, 0.85); }
+    }
+
+    .timeline-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .timeline-station {
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    .timeline-time {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    
+    <!-- HEADER -->
+    <header class="header">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 2c-4 0-8 1-8 5v10c0 2.2 1.8 4 4 4l-2 2v1h12v-1l-2-2c2.2 0 4-1.8 4-4V7c0-4-4-5-8-5zm-4 16c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm8 0c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm2-7H6V7h12v4z"/></svg>
+        </div>
+        <div class="brand-text">
+          <h1>Juna-Aikataulut</h1>
+          <p id="apiStatusText">Digitraffic Live Data</p>
+        </div>
+      </div>
+      <button class="refresh-btn" id="refreshBtn" title="Päivitä data">
+        <svg viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+      </button>
+    </header>
+
+    <!-- PRESET BUTTONS (KERAVA & HELSINKI) -->
+    <section>
+      <div class="section-title">Pika-asemat</div>
+      <div class="presets-grid">
+        <div class="preset-card active" id="presetKE" onclick="selectPreset('KE', 'Kerava')">
+          <div class="preset-header">
+            <span class="preset-name">Kerava</span>
+            <span class="preset-code">KE</span>
+          </div>
+          <span class="preset-sub">Keravan asema</span>
+        </div>
+
+        <div class="preset-card" id="presetHKI" onclick="selectPreset('HKI', 'Helsinki')">
+          <div class="preset-header">
+            <span class="preset-name">Helsinki</span>
+            <span class="preset-code">HKI</span>
+          </div>
+          <span class="preset-sub">Päärautatieasema</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- SEARCH BAR & AUTOCOMPLETE -->
+    <section class="search-box">
+      <div class="section-title">Hae asemaa</div>
+      <div class="search-input-wrapper">
+        <svg class="search-icon" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+        <input type="text" id="searchInput" class="search-input" placeholder="Syötä aseman nimi (esim. Tampere, Pasila, Oulu...)" autocomplete="off">
+        <button class="clear-search-btn" id="clearSearchBtn" onclick="clearSearch()">✕</button>
+      </div>
+      <div class="autocomplete-list" id="autocompleteList"></div>
+    </section>
+
+    <!-- CONTROLS & FILTER TABS -->
+    <section class="controls-bar">
+      <div class="current-station-title">
+        <span id="currentStationName">Kerava</span> lähtevät
+      </div>
+      <div class="filter-tabs">
+        <button class="filter-tab active" onclick="setFilter('COMMUTER', this)">Lähijunat</button>
+        <button class="filter-tab" onclick="setFilter('LONG', this)">Kauko</button>
+        <button class="filter-tab" onclick="setFilter('ALL', this)">Kaikki</button>
+      </div>
+    </section>
+
+    <!-- DEPARTURES CONTAINER -->
+    <main class="departures-list" id="departuresList">
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <p>Haetaan seuraavia lähteviä junia...</p>
+      </div>
+    </main>
+
+  </div>
+
+  <!-- ROUTE DETAILS FULL PAGE VIEW -->
+  <div class="modal-overlay" id="routeModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button class="modal-back-btn" onclick="closeModal()">
+          <span>←</span> Takaisin
+        </button>
+        <div class="modal-title-group">
+          <div class="modal-title" id="modalTrainTitle">Juna Reitti</div>
+          <div class="modal-subtitle" id="modalTrainSubtitle">Aseman pysäkit</div>
+        </div>
+      </div>
+      <div class="timeline" id="modalTimeline"></div>
+    </div>
+  </div>
+
+  <script>
+    // Embedded Finnish Passenger Stations Database (Fallback & Instant Search)
+    const STATIONS_DB = [
+      { name: "Helsinki", code: "HKI" },
+      { name: "Kerava", code: "KE" },
+      { name: "Pasila", code: "PSL" },
+      { name: "Tikkurila", code: "TKL" },
+      { name: "Tampere", code: "TPE" },
+      { name: "Oulu", code: "OL" },
+      { name: "Turku", code: "TKU" },
+      { name: "Kupittaa", code: "KPT" },
+      { name: "Riihimäki", code: "RI" },
+      { name: "Lahti", code: "LHN" },
+      { name: "Kouvola", code: "KV" },
+      { name: "Jyväskylä", code: "JY" },
+      { name: "Kuopio", code: "KUO" },
+      { name: "Joensuu", code: "JNS" },
+      { name: "Vaasa", code: "VS" },
+      { name: "Seinäjoki", code: "SK" },
+      { name: "Rovaniemi", code: "ROI" },
+      { name: "Hämeenlinna", code: "HM" },
+      { name: "Lappeenranta", code: "LR" },
+      { name: "Imatra", code: "IMR" },
+      { name: "Mikkeli", code: "MI" },
+      { name: "Pieksämäki", code: "PM" },
+      { name: "Kokkola", code: "KOK" },
+      { name: "Kajaani", code: "KAJ" },
+      { name: "Kemijärvi", code: "KJ" },
+      { name: "Kolari", code: "KLI" },
+      { name: "Pori", code: "PRI" },
+      { name: "Kirkkonummi", code: "KN" },
+      { name: "Espoo", code: "EPO" },
+      { name: "Leppävaara", code: "LPV" },
+      { name: "Kauniainen", code: "KNI" },
+      { name: "Siuntio", code: "STI" },
+      { name: "Karjaa", code: "KR" },
+      { name: "Salo", code: "SLO" },
+      { name: "Lentoasema", code: "LEN" },
+      { name: "Myyrmäki", code: "MYR" },
+      { name: "Martinlaakso", code: "MRL" },
+      { name: "Kivistö", code: "KTÖ" },
+      { name: "Aviapolis", code: "AVP" },
+      { name: "Malmi", code: "ML" },
+      { name: "Puistola", code: "PLA" },
+      { name: "Tapanila", code: "TPA" },
+      { name: "Oulunkylä", code: "OLK" },
+      { name: "Pukinmäki", code: "PKM" },
+      { name: "Käpylä", code: "KPL" },
+      { name: "Korso", code: "KRS" },
+      { name: "Savio", code: "SAV" },
+      { name: "Järvenpää", code: "JP" },
+      { name: "Saunakallio", code: "SK" },
+      { name: "Jokela", code: "JK" },
+      { name: "Hyvinkää", code: "HY" },
+      { name: "Mäntsälä", code: "MN" },
+      { name: "Haarajoki", code: "HJP" }
+    ];
+
+    let allStations = [...STATIONS_DB];
+    let currentStationCode = "KE";
+    let currentStationName = "Kerava";
+    let currentCategoryFilter = "COMMUTER";
+    let currentDeparturesData = [];
+
+    // DOM Elements
+    const searchInput = document.getElementById("searchInput");
+    const clearSearchBtn = document.getElementById("clearSearchBtn");
+    const autocompleteList = document.getElementById("autocompleteList");
+    const departuresList = document.getElementById("departuresList");
+    const currentStationTitle = document.getElementById("currentStationName");
+    const refreshBtn = document.getElementById("refreshBtn");
+    const apiStatusText = document.getElementById("apiStatusText");
+    const presetHKI = document.getElementById("presetHKI");
+    const presetKE = document.getElementById("presetKE");
+
+    // Init App
+    document.addEventListener("DOMContentLoaded", () => {
+      fetchStationsMetadata();
+      selectPreset("KE", "Kerava");
+
+      // Auto Refresh every 30 seconds
+      setInterval(() => {
+        loadDepartures(false);
+      }, 30000);
+
+      // Countdown ticker every 1 second
+      setInterval(updateCountdowns, 1000);
+    });
+
+    // LocalStorage Caching Helpers for Helsinki & Kerava
+    function saveStationCache(code, trains) {
+      if (code !== "HKI" && code !== "KE") return;
+      try {
+        const cacheObj = {
+          timestamp: Date.now(),
+          trains: trains
+        };
+        localStorage.setItem(`cache_trains_${code}`, JSON.stringify(cacheObj));
+      } catch (e) {
+        console.warn("Could not save station cache to localStorage", e);
+      }
+    }
+
+    function getStationCache(code) {
+      if (code !== "HKI" && code !== "KE") return null;
+      try {
+        const raw = localStorage.getItem(`cache_trains_${code}`);
+        if (raw) return JSON.parse(raw);
+      } catch (e) {
+        console.warn("Could not read station cache from localStorage", e);
+      }
+      return null;
+    }
+
+    // Fetch dynamic full station list from Digitraffic API
+    async function fetchStationsMetadata() {
+      try {
+        const response = await fetch("https://rata.digitraffic.fi/api/v1/metadata/stations", {
+          headers: { "Digitraffic-User": "FinnishTrainDepartures/1.0" }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          const passengerStations = data
+            .filter(s => s.passengerTraffic === true)
+            .map(s => ({
+              name: s.stationName.replace(" asema", "").replace(" päärautatieasema", ""),
+              code: s.stationShortCode
+            }));
+          if (passengerStations.length > 0) {
+            allStations = passengerStations;
+          }
+        }
+      } catch (err) {
+        console.warn("Using offline fallback stations metadata.", err);
+      }
+    }
+
+    // Load Departures for Selected Station (with instant cache rendering for HKI & KE)
+    async function loadDepartures(showLoading = true) {
+      let cachedRendered = false;
+      const cached = getStationCache(currentStationCode);
+
+      // Render cached data immediately for zero-latency mobile startup
+      if (cached && cached.trains && cached.trains.length > 0) {
+        processAndRenderDepartures(cached.trains);
+        cachedRendered = true;
+        const cacheTimeStr = formatHM(new Date(cached.timestamp));
+        apiStatusText.innerText = `⚡ Välimuisti (tallennettu ${cacheTimeStr})`;
+        apiStatusText.style.color = "var(--accent-orange)";
+      } else if (showLoading) {
+        departuresList.innerHTML = `
+          <div class="loading-state">
+            <div class="spinner"></div>
+            <p>Ladataan lähteviä junia aseman <strong>${currentStationName}</strong> raiteilta...</p>
+          </div>
+        `;
+        apiStatusText.innerText = "Ladataan...";
+        apiStatusText.style.color = "var(--text-muted)";
+      }
+
+      refreshBtn.classList.add("spinning");
+
+      try {
+        const url = `https://rata.digitraffic.fi/api/v1/live-trains/station/${currentStationCode}?departing_trains=35`;
+        const response = await fetch(url, {
+          headers: { "Digitraffic-User": "FinnishTrainDepartures/1.0" }
+        });
+
+        if (!response.ok) throw new Error("API virhe");
+
+        const trains = await response.json();
+
+        // Save fresh response to localStorage cache for Helsinki / Kerava
+        saveStationCache(currentStationCode, trains);
+
+        // Process & Render live fresh data
+        processAndRenderDepartures(trains);
+        apiStatusText.innerText = "Digitraffic Live Data";
+        apiStatusText.style.color = "var(--text-muted)";
+      } catch (error) {
+        console.error("Fetch error:", error);
+        if (cachedRendered && cached) {
+          const cacheTimeStr = formatHM(new Date(cached.timestamp));
+          apiStatusText.innerText = `⚠️ Offline (tallennettu ${cacheTimeStr})`;
+          apiStatusText.style.color = "var(--accent-orange)";
+        } else {
+          departuresList.innerHTML = `
+            <div class="empty-state">
+              <p>⚠️ Virhe ladattaessa aikatauluja. Tarkista verkkoyhteys.</p>
+              <button class="filter-tab active" onclick="loadDepartures(true)">Yritä uudelleen</button>
+            </div>
+          `;
+          apiStatusText.innerText = "Yhteysvirhe";
+          apiStatusText.style.color = "var(--accent-red)";
+        }
+      } finally {
+        setTimeout(() => refreshBtn.classList.remove("spinning"), 500);
+      }
+    }
+
+    // Process Raw API Data
+    function processAndRenderDepartures(trains) {
+      const now = new Date();
+      currentDeparturesData = [];
+
+      trains.forEach(train => {
+        // Filter passenger categories
+        if (train.trainCategory !== "Commuter" && train.trainCategory !== "Long-distance") return;
+
+        // Find timetable row for current departing station
+        const depRow = train.timeTableRows.find(
+          r => r.stationShortCode === currentStationCode && r.type === "DEPARTURE" && r.trainStopping === true
+        );
+        if (!depRow) return;
+
+        // Get Scheduled and Estimated Time
+        const scheduledTime = new Date(depRow.scheduledTime);
+        const liveTime = depRow.liveEstimateTime ? new Date(depRow.liveEstimateTime) : scheduledTime;
+
+        // Ignore past departures (> 2 mins ago)
+        const timeDiffMinutes = (liveTime - now) / 60000;
+        if (timeDiffMinutes < -2) return;
+
+        // Destination Station
+        const stoppingRows = train.timeTableRows.filter(r => r.trainStopping === true);
+        const destRow = stoppingRows[stoppingRows.length - 1];
+        const destStation = getStationName(destRow ? destRow.stationShortCode : "");
+
+        // Train Line Code
+        let lineCode = train.commuterLineID;
+        let isCommuter = train.trainCategory === "Commuter";
+        if (!lineCode) {
+          lineCode = train.trainType;
+        }
+
+        currentDeparturesData.push({
+          rawTrain: train,
+          trainNumber: train.trainNumber,
+          trainCategory: train.trainCategory,
+          trainType: train.trainType,
+          lineCode: lineCode,
+          isCommuter: isCommuter,
+          destination: destStation,
+          scheduledTime: scheduledTime,
+          liveTime: liveTime,
+          track: depRow.commercialTrack || "-",
+          cancelled: depRow.cancelled === true || train.cancelled === true
+        });
+      });
+
+      // Sort by Departure Time
+      currentDeparturesData.sort((a, b) => a.liveTime - b.liveTime);
+      renderDepartures();
+    }
+
+    // Render Filtered Departures
+    function renderDepartures() {
+      let filtered = currentDeparturesData;
+
+      if (currentCategoryFilter === "COMMUTER") {
+        filtered = filtered.filter(t => t.isCommuter);
+      } else if (currentCategoryFilter === "LONG") {
+        filtered = filtered.filter(t => !t.isCommuter);
+      }
+
+      if (filtered.length === 0) {
+        departuresList.innerHTML = `
+          <div class="empty-state">
+            <p>Ei lähteviä junia lähiaikoina tällä valinnalla.</p>
+          </div>
+        `;
+        return;
+      }
+
+      let html = "";
+      filtered.forEach((t, idx) => {
+        const schedHM = formatHM(t.scheduledTime);
+        const liveHM = formatHM(t.liveTime);
+        const isDelayed = Math.round((t.liveTime - t.scheduledTime) / 60000) >= 2;
+        const delayMins = Math.round((t.liveTime - t.scheduledTime) / 60000);
+
+        // Badge Class
+        let badgeClass = "badge-other";
+        if (t.isCommuter) badgeClass = "badge-commuter";
+        else if (t.trainType === "IC") badgeClass = "badge-ic";
+        else if (t.trainType === "S") badgeClass = "badge-pendolino";
+
+        // Status Tag HTML
+        let statusHtml = `<span class="status-tag status-ontime">Ajoissa</span>`;
+        if (t.cancelled) {
+          statusHtml = `<span class="status-tag status-cancelled">PERUTTU</span>`;
+        } else if (isDelayed) {
+          statusHtml = `<span class="status-tag status-delayed">+${delayMins} min</span>`;
+        }
+
+        html += `
+          <div class="train-card" onclick="openRouteModal(${idx})">
+            <div class="train-card-main">
+              <div class="train-left">
+                <div class="line-badge ${badgeClass}">${t.lineCode}</div>
+                <div class="train-info">
+                  <div class="destination-name">${t.destination}</div>
+                  <div class="train-meta-sub">
+                    <span>${t.isCommuter ? 'Lähijuna' : t.trainType + ' ' + t.trainNumber}</span>
+                    <span class="track-pill">Raide ${t.track}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="train-right">
+                ${isDelayed ? `
+                  <div class="departure-time delayed">${schedHM}</div>
+                  <div class="new-time">${liveHM}</div>
+                ` : `
+                  <div class="departure-time">${schedHM}</div>
+                `}
+                ${statusHtml}
+              </div>
+            </div>
+
+            <div class="countdown-bar">
+              <span>Reitti & pysäkit ➔</span>
+              <span class="countdown-pill" id="cd-${idx}">${getCountdownText(t.liveTime, t.cancelled)}</span>
+            </div>
+          </div>
+        `;
+      });
+
+      departuresList.innerHTML = html;
+    }
+
+    // Live Dynamic Countdown Text (Seconds < 1 min, Minutes 1-50 min, Hours & Mins >= 60 min)
+    function getCountdownText(targetTime, cancelled) {
+      if (cancelled) return "Peruttu";
+      const now = new Date();
+      const diffSecs = Math.floor((targetTime - now) / 1000);
+      if (diffSecs <= 0) return "Nyt / Lähtee";
+      if (diffSecs < 60) return `Lähtee ${diffSecs}s`;
+
+      const totalMins = Math.floor(diffSecs / 60);
+      if (totalMins < 60) {
+        return `${totalMins} min`;
+      }
+
+      const hours = Math.floor(totalMins / 60);
+      const mins = totalMins % 60;
+      if (mins === 0) {
+        return `${hours}h`;
+      }
+      return `${hours}h ${mins}min`;
+    }
+
+    // Ticker to update countdowns every second
+    function updateCountdowns() {
+      currentDeparturesData.forEach((t, idx) => {
+        const el = document.getElementById(`cd-${idx}`);
+        if (el) {
+          el.innerText = getCountdownText(t.liveTime, t.cancelled);
+        }
+      });
+    }
+
+    // Helper: Station Name from Code
+    function getStationName(code) {
+      const found = allStations.find(s => s.code === code);
+      return found ? found.name : code;
+    }
+
+    // Format HH:MM
+    function formatHM(dateObj) {
+      const h = String(dateObj.getHours()).padStart(2, "0");
+      const m = String(dateObj.getMinutes()).padStart(2, "0");
+      return `${h}:${m}`;
+    }
+
+    // PRESET SELECTION (HELSINKI / KERAVA)
+    function selectPreset(code, name) {
+      currentStationCode = code;
+      currentStationName = name;
+      currentStationTitle.innerText = name;
+
+      // Update preset card active styling
+      presetHKI.classList.toggle("active", code === "HKI");
+      presetKE.classList.toggle("active", code === "KE");
+
+      searchInput.value = "";
+      clearSearchBtn.classList.remove("visible");
+      autocompleteList.classList.remove("visible");
+
+      loadDepartures(true);
+    }
+
+    // SEARCH INPUT AUTOCOMPLETE
+    searchInput.addEventListener("input", (e) => {
+      const query = e.target.value.trim().toLowerCase();
+      if (query.length > 0) {
+        clearSearchBtn.classList.add("visible");
+        showAutocomplete(query);
+      } else {
+        clearSearchBtn.classList.remove("visible");
+        autocompleteList.classList.remove("visible");
+      }
+    });
+
+    function showAutocomplete(query) {
+      const matches = allStations.filter(
+        s => s.name.toLowerCase().includes(query) || s.code.toLowerCase().includes(query)
+      ).slice(0, 8);
+
+      if (matches.length === 0) {
+        autocompleteList.classList.remove("visible");
+        return;
+      }
+
+      let html = "";
+      matches.forEach(s => {
+        html += `
+          <div class="autocomplete-item" onclick="selectStation('${s.code}', '${s.name}')">
+            <span class="autocomplete-name">${s.name}</span>
+            <span class="autocomplete-code">${s.code}</span>
+          </div>
+        `;
+      });
+      autocompleteList.innerHTML = html;
+      autocompleteList.classList.add("visible");
+    }
+
+    function selectStation(code, name) {
+      currentStationCode = code;
+      currentStationName = name;
+      currentStationTitle.innerText = name;
+
+      presetHKI.classList.remove("active");
+      presetKE.classList.remove("active");
+      if (code === "HKI") presetHKI.classList.add("active");
+      if (code === "KE") presetKE.classList.add("active");
+
+      searchInput.value = "";
+      clearSearchBtn.classList.remove("visible");
+      autocompleteList.classList.remove("visible");
+
+      loadDepartures(true);
+    }
+
+    function clearSearch() {
+      searchInput.value = "";
+      clearSearchBtn.classList.remove("visible");
+      autocompleteList.classList.remove("visible");
+    }
+
+    // CATEGORY FILTERS
+    function setFilter(cat, btnEl) {
+      currentCategoryFilter = cat;
+      document.querySelectorAll(".filter-tab").forEach(b => b.classList.remove("active"));
+      btnEl.classList.add("active");
+      renderDepartures();
+    }
+
+    // REFRESH BUTTON
+    refreshBtn.addEventListener("click", () => {
+      loadDepartures(true);
+    });
+
+    // ROUTE ITINERARY FULL PAGE VIEW
+    function openRouteModal(trainIndex) {
+      const item = currentDeparturesData[trainIndex];
+      if (!item) return;
+
+      const train = item.rawTrain;
+      document.getElementById("modalTrainTitle").innerText = `${item.lineCode} ➔ ${item.destination}`;
+      
+      // Group timetable rows by station in sequential order
+      const stationMap = new Map();
+      train.timeTableRows.forEach(r => {
+        if (!r.trainStopping) return;
+        if (!stationMap.has(r.stationShortCode)) {
+          stationMap.set(r.stationShortCode, { dep: null, arr: null });
+        }
+        const st = stationMap.get(r.stationShortCode);
+        if (r.type === 'DEPARTURE') st.dep = r;
+        if (r.type === 'ARRIVAL') st.arr = r;
+      });
+
+      const stationsList = Array.from(stationMap.entries());
+
+      // Determine train's current real-time station position
+      const now = new Date();
+      let trainCurrentIndex = -1;
+
+      // 1. Priority: check actual physical sensor timestamps (actualTime)
+      for (let i = stationsList.length - 1; i >= 0; i--) {
+        const [stCode, stData] = stationsList[i];
+        const row = stData.dep || stData.arr;
+        if (row && row.actualTime) {
+          trainCurrentIndex = i;
+          break;
+        }
+      }
+
+      // 2. Fallback: compare live estimated/scheduled time with current time
+      if (trainCurrentIndex === -1) {
+        for (let i = 0; i < stationsList.length; i++) {
+          const [stCode, stData] = stationsList[i];
+          const row = stData.dep || stData.arr;
+          if (row) {
+            const timeObj = new Date(row.liveEstimateTime || row.scheduledTime);
+            if (timeObj <= now) {
+              trainCurrentIndex = i;
+            } else {
+              break;
+            }
+          }
+        }
+      }
+
+      // If train hasn't departed origin station yet
+      if (trainCurrentIndex === -1) {
+        trainCurrentIndex = 0;
+      }
+
+      const currentStationNameHere = getStationName(stationsList[trainCurrentIndex][0]);
+      document.getElementById("modalTrainSubtitle").innerText = `${item.isCommuter ? 'Lähijuna' : train.trainType + ' ' + train.trainNumber} • ${stationsList.length} asemaa • Sijainti: ${currentStationNameHere}`;
+
+      let html = "";
+      stationsList.forEach(([stCode, stData], index) => {
+        const isLastStation = index === stationsList.length - 1;
+        const isTrainHere = index === trainCurrentIndex;
+
+        // Primary time source is DEPARTURE row, fallback to ARRIVAL row for final destination
+        const targetRow = stData.dep || stData.arr;
+        if (!targetRow) return;
+
+        const stationName = getStationName(stCode);
+        const timeObj = new Date(targetRow.liveEstimateTime || targetRow.scheduledTime);
+        const timeStr = formatHM(timeObj);
+        const trackStr = targetRow.commercialTrack ? `Raide ${targetRow.commercialTrack}` : '';
+
+        // Only departure time for all stations (with arrival time noted for final station)
+        let timeLabel = `klo ${timeStr}`;
+        if (isLastStation) {
+          timeLabel = `klo ${timeStr} (Pääteasema)`;
+        }
+        if (trackStr) {
+          timeLabel += ` • ${trackStr}`;
+        }
+
+        html += `
+          <div class="timeline-item ${isTrainHere ? 'active-leg' : ''}">
+            <div class="timeline-dot ${isTrainHere ? 'current' : ''}"></div>
+            <div class="timeline-info">
+              <div class="timeline-station">${stationName}</div>
+              <div class="timeline-time">${timeLabel}</div>
+            </div>
+          </div>
+        `;
+      });
+
+      document.getElementById("modalTimeline").innerHTML = html;
+      document.getElementById("routeModal").classList.add("visible");
+      document.body.style.overflow = "hidden"; // Lock background scrolling
+    }
+
+    function closeModal() {
+      document.getElementById("routeModal").classList.remove("visible");
+      document.body.style.overflow = ""; // Restore scrolling
+    }
+  </script>
+</body>
+</html>
