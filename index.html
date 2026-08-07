@@ -392,7 +392,7 @@
       background: var(--bg-card);
       border: 1px solid var(--border-color);
       border-radius: var(--radius-lg);
-      padding: 14px 16px;
+      padding: 10px 14px;
       display: flex;
       flex-direction: column;
       gap: 10px;
@@ -477,6 +477,29 @@
       font-size: 0.72rem;
     }
 
+    .train-length-visual {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      opacity: 0.88;
+      transition: opacity 0.2s;
+    }
+
+    .train-card:hover .train-length-visual {
+      opacity: 1;
+    }
+
+    .comp-svg {
+      display: block;
+      fill: var(--primary);
+      flex-shrink: 0;
+    }
+
+    .comp-label {
+      color: var(--text-main);
+      font-weight: 600;
+    }
+
     .train-right {
       display: flex;
       flex-direction: column;
@@ -538,7 +561,7 @@
       justify-content: space-between;
       font-size: 0.75rem;
       color: var(--text-muted);
-      padding-top: 6px;
+      padding-top: 4px;
       border-top: 1px dashed rgba(255, 255, 255, 0.08);
     }
 
@@ -916,10 +939,10 @@
       fetchStationsMetadata();
       selectPreset("KE", "Kerava");
 
-      // Auto Refresh every 30 seconds
-      setInterval(() => {
-        loadDepartures(false);
-      }, 30000);
+      // Auto Refresh disabled for development purposes
+      // setInterval(() => {
+      //   loadDepartures(false);
+      // }, 30000);
 
       // Countdown ticker every 1 second
       setInterval(updateCountdowns, 1000);
@@ -1036,6 +1059,53 @@
       }
     }
 
+    // Extract Train Unit Composition (1, 2, or 3 units) for Commuter trains only
+    function getTrainUnitsCount(train) {
+      if (!train || train.trainCategory !== "Commuter") return 0;
+
+      if (train.compositions && train.compositions.length > 0) {
+        try {
+          const comp = train.compositions[0];
+          if (comp && comp.journeySections && comp.journeySections.length > 0) {
+            const wagons = comp.journeySections[0].wagons;
+            if (wagons && wagons.length > 0) {
+              if (wagons.length <= 2) return 1;
+              if (wagons.length <= 4) return 2;
+              return 3;
+            }
+          }
+        } catch (e) {}
+      }
+      return 2; // Default 2 units for commuter trains
+    }
+
+    // Render Composition SVG Only (No Text) for card footer with 3px gap
+    function renderCompositionSVGOnly(unitCount) {
+      if (!unitCount || unitCount <= 0) return '';
+
+      const pathData = "M2,21h26.7c1.1,0,2.1-0.5,2.7-1.4c0.6-0.9,0.8-1.9,0.4-2.9c-1.4-4-5.2-6.7-9.6-6.7H2c-0.6,0-1,0.4-1,1v9 C1,20.6,1.4,21,2,21z M15,15v-3h4v3H15z M13,15H9v-3h4V15z M28.6,15H21v-3h1.3C24.8,12,27.1,13.1,28.6,15z M7,12v3H3v-3H7z";
+
+      // 1 single 75m double-ended trainset unit SVG HTML (36px x 20px)
+      const singleUnitSvg = `
+        <svg class="comp-svg" style="width: 36px; height: 20px;" viewBox="0 0 64 32" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+          <g transform="matrix(-1, 0, 0, 1, 32, 0)"><path d="${pathData}"/></g>
+          <g transform="translate(32,0)"><path d="${pathData}"/></g>
+        </svg>
+      `;
+
+      let unitsHtml = '';
+      const count = Math.min(Math.max(unitCount, 1), 3);
+      for (let i = 0; i < count; i++) {
+        unitsHtml += singleUnitSvg;
+      }
+
+      return `
+        <div class="train-length-visual" title="Junan pituus: ${unitCount} yksikköä">
+          ${unitsHtml}
+        </div>
+      `;
+    }
+
     // Process Raw API Data
     function processAndRenderDepartures(trains) {
       const now = new Date();
@@ -1071,6 +1141,8 @@
           lineCode = train.trainType;
         }
 
+        const unitCount = getTrainUnitsCount(train);
+
         currentDeparturesData.push({
           rawTrain: train,
           trainNumber: train.trainNumber,
@@ -1082,7 +1154,8 @@
           scheduledTime: scheduledTime,
           liveTime: liveTime,
           track: depRow.commercialTrack || "-",
-          cancelled: depRow.cancelled === true || train.cancelled === true
+          cancelled: depRow.cancelled === true || train.cancelled === true,
+          unitCount: unitCount
         });
       });
 
@@ -1131,6 +1204,8 @@
           statusHtml = `<span class="status-tag status-delayed">+${delayMins} min</span>`;
         }
 
+        const compSvgHtml = renderCompositionSVGOnly(t.unitCount);
+
         html += `
           <div class="train-card" onclick="openRouteModal(${idx})">
             <div class="train-card-main">
@@ -1157,7 +1232,7 @@
             </div>
 
             <div class="countdown-bar">
-              <span>Reitti & pysäkit ➔</span>
+              ${compSvgHtml || '<span></span>'}
               <span class="countdown-pill" id="cd-${idx}">${getCountdownText(t.liveTime, t.cancelled)}</span>
             </div>
           </div>
@@ -1357,7 +1432,8 @@
       }
 
       const currentStationNameHere = getStationName(stationsList[trainCurrentIndex][0]);
-      document.getElementById("modalTrainSubtitle").innerText = `${item.isCommuter ? 'Lähijuna' : train.trainType + ' ' + train.trainNumber} • ${stationsList.length} asemaa • Sijainti: ${currentStationNameHere}`;
+      const compLabel = item.unitCount > 0 ? ` • ${item.unitCount} yksikköä` : '';
+      document.getElementById("modalTrainSubtitle").innerText = `${item.isCommuter ? 'Lähijuna' : train.trainType + ' ' + train.trainNumber}${compLabel} • ${stationsList.length} asemaa • Sijainti: ${currentStationNameHere}`;
 
       let html = "";
       stationsList.forEach(([stCode, stData], index) => {
