@@ -975,8 +975,14 @@
       { name: "Jokela", code: "JK" },
       { name: "Hyvinkää", code: "HY" },
       { name: "Mäntsälä", code: "MN" },
-      { name: "Haarajoki", code: "HJP" }
+      { name: "Haarajoki", code: "HJP" },
+      { name: "Pasilan autojuna-asema", code: "PSLT" }
     ];
+
+    // Custom Station Name Overrides for special stations (e.g. night train / car carrier stations)
+    const CUSTOM_STATION_NAMES = {
+      "PSLT": "Pasilan autojuna-asema"
+    };
 
     let allStations = [...STATIONS_DB];
     let currentStationCode = "KE";
@@ -1077,9 +1083,9 @@
         if (response.ok) {
           const data = await response.json();
           const passengerStations = data
-            .filter(s => s.passengerTraffic === true)
+            .filter(s => s.passengerTraffic === true || CUSTOM_STATION_NAMES[s.stationShortCode])
             .map(s => ({
-              name: s.stationName.replace(" asema", "").replace(" päärautatieasema", ""),
+              name: CUSTOM_STATION_NAMES[s.stationShortCode] || s.stationName.replace(" asema", "").replace(" päärautatieasema", ""),
               code: s.stationShortCode
             }));
           if (passengerStations.length > 0) {
@@ -1371,6 +1377,9 @@
 
     // Helper: Station Name from Code
     function getStationName(code) {
+      if (CUSTOM_STATION_NAMES[code]) {
+        return CUSTOM_STATION_NAMES[code];
+      }
       const found = allStations.find(s => s.code === code);
       return found ? found.name : code;
     }
