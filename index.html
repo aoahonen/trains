@@ -648,14 +648,16 @@
       background: var(--bg-card);
       border: 1px solid var(--border-color);
       color: var(--text-main);
-      padding: 8px 14px;
-      border-radius: 20px;
-      font-size: 0.85rem;
-      font-weight: 600;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      font-size: 1.3rem;
+      font-weight: 700;
       cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 6px;
+      justify-content: center;
+      flex-shrink: 0;
       transition: all 0.2s;
     }
 
@@ -906,8 +908,8 @@
   <div class="modal-overlay" id="routeModal">
     <div class="modal-content">
       <div class="modal-header">
-        <button class="modal-back-btn" onclick="closeModal()">
-          <span>←</span> Takaisin
+        <button class="modal-back-btn" onclick="closeModal()" title="Takaisin">
+          <span>←</span>
         </button>
         <div class="modal-title-group">
           <div class="modal-title" id="modalTrainTitle">Juna Reitti</div>
@@ -1611,15 +1613,33 @@
         }
       });
 
+      // Open modal & push state for device back button integration
+      if (!document.getElementById("routeModal").classList.contains("visible")) {
+        history.pushState({ modalOpen: true }, "");
+      }
       document.getElementById("modalTimeline").innerHTML = html;
       document.getElementById("routeModal").classList.add("visible");
       document.body.style.overflow = "hidden"; // Lock background scrolling
     }
 
-    function closeModal() {
-      document.getElementById("routeModal").classList.remove("visible");
-      document.body.style.overflow = ""; // Restore scrolling
+    function closeModal(popHistory = true) {
+      const modal = document.getElementById("routeModal");
+      if (modal && modal.classList.contains("visible")) {
+        modal.classList.remove("visible");
+        document.body.style.overflow = ""; // Restore scrolling
+        if (popHistory && window.history.state && window.history.state.modalOpen) {
+          window.history.back();
+        }
+      }
     }
+
+    // Intercept hardware / browser back button when modal is open
+    window.addEventListener("popstate", (e) => {
+      const modal = document.getElementById("routeModal");
+      if (modal && modal.classList.contains("visible")) {
+        closeModal(false);
+      }
+    });
   </script>
 </body>
 </html>
