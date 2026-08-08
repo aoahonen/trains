@@ -4,7 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <!-- Embedded Web App Manifest for PWA Installation -->
-  <link rel="manifest" href='data:application/manifest+json;charset=utf-8,{"name":"Juna-Aikataulut","short_name":"Juna-Aikataulut","description":"Suomen junien live-aikataulut","start_url":".","display":"standalone","orientation":"portrait","background_color":"%23090d16","theme_color":"%23090d16","icons":[{"src":"data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"%2300d2ff\"><path d=\"M12 2c-4 0-8 1-8 5v10c0 2.2 1.8 4 4 4l-2 2v1h12v-1l-2-2c2.2 0 4-1.8 4-4V7c0-4-4-5-8-5zm-4 16c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm8 0c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm2-7H6V7h12v4z\"/></svg>","sizes":"192x192 512x512","type":"image/svg+xml"}]}'>
+  <link rel="manifest" href='data:application/manifest+json;charset=utf-8,{"name":"Juna-Aikataulut","short_name":"Juna-Aikataulut","description":"Suomen junien live-aikataulut","start_url":".","display":"standalone","orientation":"portrait","background_color":"%23090d16","theme_color":"%23090d16","icons":[{"src":"data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 512 512\"><rect width=\"512\" height=\"512\" rx=\"115\" fill=\"%23090d16\"/><rect x=\"16\" y=\"16\" width=\"480\" height=\"480\" rx=\"100\" fill=\"none\" stroke=\"%2300d2ff\" stroke-width=\"12\" opacity=\"0.8\"/><rect x=\"116\" y=\"96\" width=\"280\" height=\"280\" rx=\"56\" fill=\"%23131b2e\" stroke=\"%2300d2ff\" stroke-width=\"10\"/><rect x=\"146\" y=\"136\" width=\"220\" height=\"100\" rx=\"24\" fill=\"%23090d16\" stroke=\"%2300d2ff\" stroke-width=\"6\"/><circle cx=\"176\" cy=\"306\" r=\"22\" fill=\"%2355e3ff\"/><circle cx=\"336\" cy=\"306\" r=\"22\" fill=\"%2355e3ff\"/><rect x=\"236\" y=\"296\" width=\"40\" height=\"20\" rx=\"10\" fill=\"%2300d2ff\"/><path d=\"M146 426 L226 376 M366 426 L286 376 M106 426 L406 426\" stroke=\"%2300d2ff\" stroke-width=\"14\" stroke-linecap=\"round\"/></svg>","sizes":"192x192 512x512","type":"image/svg+xml","purpose":"any maskable"}]}'>
+  <link rel="icon" type="image/svg+xml" href='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="115" fill="%23090d16"/><rect x="16" y="16" width="480" height="480" rx="100" fill="none" stroke="%2300d2ff" stroke-width="12" opacity="0.8"/><rect x="116" y="96" width="280" height="280" rx="56" fill="%23131b2e" stroke="%2300d2ff" stroke-width="10"/><rect x="146" y="136" width="220" height="100" rx="24" fill="%23090d16" stroke="%2300d2ff" stroke-width="6"/><circle cx="176" cy="306" r="22" fill="%2355e3ff"/><circle cx="336" cy="306" r="22" fill="%2355e3ff"/><rect x="236" y="296" width="40" height="20" rx="10" fill="%2300d2ff"/><path d="M146 426 L226 376 M366 426 L286 376 M106 426 L406 426" stroke="%2300d2ff" stroke-width="14" stroke-linecap="round"/></svg>'>
+  <link rel="apple-touch-icon" href='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="115" fill="%23090d16"/><rect x="16" y="16" width="480" height="480" rx="100" fill="none" stroke="%2300d2ff" stroke-width="12" opacity="0.8"/><rect x="116" y="96" width="280" height="280" rx="56" fill="%23131b2e" stroke="%2300d2ff" stroke-width="10"/><rect x="146" y="136" width="220" height="100" rx="24" fill="%23090d16" stroke="%2300d2ff" stroke-width="6"/><circle cx="176" cy="306" r="22" fill="%2355e3ff"/><circle cx="336" cy="306" r="22" fill="%2355e3ff"/><rect x="236" y="296" width="40" height="20" rx="10" fill="%2300d2ff"/><path d="M146 426 L226 376 M366 426 L286 376 M106 426 L406 426" stroke="%2300d2ff" stroke-width="14" stroke-linecap="round"/></svg>'>
   <meta name="theme-color" content="#090d16">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -78,10 +80,10 @@
     }
 
     .brand-icon {
-      width: 38px;
-      height: 38px;
-      background: linear-gradient(135deg, #00d2ff, #0055ff);
-      border-radius: var(--radius-md);
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      overflow: hidden;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -89,9 +91,9 @@
     }
 
     .brand-icon svg {
-      width: 22px;
-      height: 22px;
-      fill: #ffffff;
+      width: 100%;
+      height: 100%;
+      display: block;
     }
 
     .brand-text h1 {
@@ -726,6 +728,36 @@
       box-shadow: 0 0 8px rgba(51, 218, 255, 0.4);
     }
 
+    .timeline-transit-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      position: relative;
+      padding: 0 0 12px 0;
+      margin-top: -12px;
+    }
+
+    .timeline-transit-item::after {
+      content: '';
+      position: absolute;
+      left: 10.5px;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background: #33daff;
+      box-shadow: 0 0 8px rgba(51, 218, 255, 0.4);
+    }
+
+    .timeline-transit-text {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--primary);
+      background: rgba(0, 210, 255, 0.08);
+      border: 1px dashed rgba(0, 210, 255, 0.3);
+      padding: 3px 9px;
+      border-radius: var(--radius-sm);
+    }
+
     .timeline-dot {
       width: 24px;
       height: 24px;
@@ -746,6 +778,14 @@
       animation: pulseDot 1.5s infinite alternate;
     }
 
+    .timeline-dot.transit-dot {
+      width: 14px;
+      height: 14px;
+      margin-left: 5px;
+      animation: none;
+      box-shadow: 0 0 8px rgba(85, 227, 255, 0.7);
+    }
+
     @keyframes pulseDot {
       from { transform: scale(1); box-shadow: 0 0 7px rgba(0, 210, 255, 0.6); }
       to { transform: scale(1.08); box-shadow: 0 0 11px rgba(85, 227, 255, 0.85); }
@@ -762,6 +802,16 @@
       font-size: 0.95rem;
     }
 
+    .timeline-station.passed {
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .timeline-dot.passed {
+      border-color: rgba(255, 255, 255, 0.2);
+      opacity: 0.5;
+    }
+
     .timeline-time {
       font-size: 0.78rem;
       color: var(--text-muted);
@@ -776,7 +826,16 @@
     <header class="header">
       <div class="brand">
         <div class="brand-icon">
-          <svg viewBox="0 0 24 24"><path d="M12 2c-4 0-8 1-8 5v10c0 2.2 1.8 4 4 4l-2 2v1h12v-1l-2-2c2.2 0 4-1.8 4-4V7c0-4-4-5-8-5zm-4 16c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm8 0c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm2-7H6V7h12v4z"/></svg>
+          <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+            <rect width="512" height="512" rx="115" fill="#090d16"/>
+            <rect x="16" y="16" width="480" height="480" rx="100" fill="none" stroke="#00d2ff" stroke-width="12" opacity="0.8"/>
+            <rect x="116" y="96" width="280" height="280" rx="56" fill="#131b2e" stroke="#00d2ff" stroke-width="10"/>
+            <rect x="146" y="136" width="220" height="100" rx="24" fill="#090d16" stroke="#00d2ff" stroke-width="6"/>
+            <circle cx="176" cy="306" r="22" fill="#55e3ff"/>
+            <circle cx="336" cy="306" r="22" fill="#55e3ff"/>
+            <rect x="236" y="296" width="40" height="20" rx="10" fill="#00d2ff"/>
+            <path d="M146 426 L226 376 M366 426 L286 376 M106 426 L406 426" stroke="#00d2ff" stroke-width="14" stroke-linecap="round"/>
+          </svg>
         </div>
         <div class="brand-text">
           <h1>Juna-Aikataulut</h1>
@@ -973,8 +1032,42 @@
       return null;
     }
 
-    // Fetch dynamic full station list from Digitraffic API
+    // Station Metadata Caching Helpers (Daily 24h Refresh)
+    function loadCachedStations() {
+      try {
+        const cachedRaw = localStorage.getItem("app_stations_metadata");
+        const cacheDate = localStorage.getItem("app_stations_date");
+        if (cachedRaw) {
+          const parsed = JSON.parse(cachedRaw);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            allStations = parsed;
+          }
+        }
+        const todayStr = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+        return cacheDate === todayStr;
+      } catch (e) {
+        console.warn("Could not load cached station metadata", e);
+        return false;
+      }
+    }
+
+    function saveCachedStations(stationsList) {
+      try {
+        const todayStr = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+        localStorage.setItem("app_stations_metadata", JSON.stringify(stationsList));
+        localStorage.setItem("app_stations_date", todayStr);
+      } catch (e) {
+        console.warn("Could not save station metadata to localStorage", e);
+      }
+    }
+
+    // Fetch dynamic full station list from Digitraffic API (with Daily Cache)
     async function fetchStationsMetadata() {
+      const isFresh = loadCachedStations();
+      if (isFresh) {
+        return; // Station list is already cached from today!
+      }
+
       try {
         const response = await fetch("https://rata.digitraffic.fi/api/v1/metadata/stations", {
           headers: { "Digitraffic-User": "FinnishTrainDepartures/1.0" }
@@ -989,6 +1082,7 @@
             }));
           if (passengerStations.length > 0) {
             allStations = passengerStations;
+            saveCachedStations(passengerStations);
           }
         }
       } catch (err) {
@@ -1396,29 +1490,29 @@
 
       const stationsList = Array.from(stationMap.entries());
 
-      // Determine train's current real-time station position
+      // Determine train's current real-time station vs in-transit position
       const now = new Date();
-      let trainCurrentIndex = -1;
+      let lastPassedIndex = -1;
 
       // 1. Priority: check actual physical sensor timestamps (actualTime)
       for (let i = stationsList.length - 1; i >= 0; i--) {
         const [stCode, stData] = stationsList[i];
         const row = stData.dep || stData.arr;
         if (row && row.actualTime) {
-          trainCurrentIndex = i;
+          lastPassedIndex = i;
           break;
         }
       }
 
       // 2. Fallback: compare live estimated/scheduled time with current time
-      if (trainCurrentIndex === -1) {
+      if (lastPassedIndex === -1) {
         for (let i = 0; i < stationsList.length; i++) {
           const [stCode, stData] = stationsList[i];
           const row = stData.dep || stData.arr;
           if (row) {
             const timeObj = new Date(row.liveEstimateTime || row.scheduledTime);
             if (timeObj <= now) {
-              trainCurrentIndex = i;
+              lastPassedIndex = i;
             } else {
               break;
             }
@@ -1426,21 +1520,58 @@
         }
       }
 
-      // If train hasn't departed origin station yet
-      if (trainCurrentIndex === -1) {
-        trainCurrentIndex = 0;
+      if (lastPassedIndex === -1) {
+        lastPassedIndex = 0;
+      }
+
+      // 5-second buffer window rule for station vs in-transit
+      let isAtStation = false;
+      let trainCurrentIndex = lastPassedIndex;
+
+      if (lastPassedIndex === 0) {
+        const originRow = stationsList[0][1].dep || stationsList[0][1].arr;
+        const originTime = new Date(originRow.actualTime || originRow.liveEstimateTime || originRow.scheduledTime);
+        const originDiffSec = (now - originTime) / 1000;
+        if (originDiffSec > 5) {
+          isAtStation = false;
+        } else {
+          isAtStation = true;
+        }
+      } else if (lastPassedIndex === stationsList.length - 1) {
+        isAtStation = true;
+      } else {
+        const currentStRow = stationsList[lastPassedIndex][1].dep || stationsList[lastPassedIndex][1].arr;
+        const currentDepTime = new Date(currentStRow.actualTime || currentStRow.liveEstimateTime || currentStRow.scheduledTime);
+        const diffFromDepSec = (now - currentDepTime) / 1000;
+
+        const nextStRow = stationsList[lastPassedIndex + 1][1].arr || stationsList[lastPassedIndex + 1][1].dep;
+        const nextArrTime = new Date(nextStRow.actualTime || nextStRow.liveEstimateTime || nextStRow.scheduledTime);
+        const diffToNextSec = (nextArrTime - now) / 1000;
+
+        if (diffFromDepSec <= 5) {
+          isAtStation = true;
+          trainCurrentIndex = lastPassedIndex;
+        } else if (diffToNextSec <= 5) {
+          isAtStation = true;
+          trainCurrentIndex = lastPassedIndex + 1;
+        } else {
+          isAtStation = false;
+          trainCurrentIndex = lastPassedIndex;
+        }
       }
 
       const currentStationNameHere = getStationName(stationsList[trainCurrentIndex][0]);
-      const compLabel = item.unitCount > 0 ? ` • ${item.unitCount} yksikköä` : '';
-      document.getElementById("modalTrainSubtitle").innerText = `${item.isCommuter ? 'Lähijuna' : train.trainType + ' ' + train.trainNumber}${compLabel} • ${stationsList.length} asemaa • Sijainti: ${currentStationNameHere}`;
+      let locationText = currentStationNameHere;
+      if (!isAtStation && trainCurrentIndex < stationsList.length - 1) {
+        const nextStName = getStationName(stationsList[trainCurrentIndex + 1][0]);
+        locationText = `${currentStationNameHere} ➔ ${nextStName}`;
+      }
+
+      document.getElementById("modalTrainSubtitle").innerText = `${item.isCommuter ? 'Lähijuna' : train.trainType + ' ' + train.trainNumber} • ${stationsList.length} asemaa • Sijainti: ${locationText}`;
 
       let html = "";
       stationsList.forEach(([stCode, stData], index) => {
         const isLastStation = index === stationsList.length - 1;
-        const isTrainHere = index === trainCurrentIndex;
-
-        // Primary time source is DEPARTURE row, fallback to ARRIVAL row for final destination
         const targetRow = stData.dep || stData.arr;
         if (!targetRow) return;
 
@@ -1449,7 +1580,6 @@
         const timeStr = formatHM(timeObj);
         const trackStr = targetRow.commercialTrack ? `Raide ${targetRow.commercialTrack}` : '';
 
-        // Only departure time for all stations (with arrival time noted for final station)
         let timeLabel = `klo ${timeStr}`;
         if (isLastStation) {
           timeLabel = `klo ${timeStr} (Pääteasema)`;
@@ -1458,15 +1588,27 @@
           timeLabel += ` • ${trackStr}`;
         }
 
+        const isHighlightHere = isAtStation && index === trainCurrentIndex;
+        const isActiveLeg = (index === trainCurrentIndex && !isLastStation);
+        const isPassed = index < trainCurrentIndex || (index === trainCurrentIndex && !isAtStation);
+
         html += `
-          <div class="timeline-item ${isTrainHere ? 'active-leg' : ''}">
-            <div class="timeline-dot ${isTrainHere ? 'current' : ''}"></div>
+          <div class="timeline-item ${isActiveLeg ? 'active-leg' : ''}">
+            <div class="timeline-dot ${isHighlightHere ? 'current' : ''} ${isPassed ? 'passed' : ''}"></div>
             <div class="timeline-info">
-              <div class="timeline-station">${stationName}</div>
+              <div class="timeline-station ${isPassed ? 'passed' : ''}">${stationName}</div>
               <div class="timeline-time">${timeLabel}</div>
             </div>
           </div>
         `;
+
+        if (!isAtStation && index === trainCurrentIndex && !isLastStation) {
+          html += `
+            <div class="timeline-transit-item active-leg">
+              <div class="timeline-dot current transit-dot"></div>
+            </div>
+          `;
+        }
       });
 
       document.getElementById("modalTimeline").innerHTML = html;
