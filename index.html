@@ -357,30 +357,44 @@
       color: var(--primary);
     }
 
-    .filter-tabs {
-      display: flex;
-      background: var(--bg-card);
-      padding: 3px;
-      border-radius: var(--radius-md);
-      border: 1px solid var(--border-color);
-    }
-
-    .filter-tab {
-      padding: 6px 10px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      color: var(--text-muted);
+    .retry-btn {
+      padding: 8px 16px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #000000;
+      background: var(--primary);
       border: none;
-      background: transparent;
       border-radius: var(--radius-sm);
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.2s ease;
+    }
+    .retry-btn:active {
+      transform: scale(0.95);
     }
 
-    .filter-tab.active {
-      background: var(--primary);
-      color: #000000;
+    .load-more-wrapper {
+      display: flex;
+      justify-content: center;
+      padding: 10px 0 16px 0;
+    }
+
+    .load-more-btn {
+      background: var(--bg-card);
+      border: 1.5px solid var(--border-color);
+      color: var(--primary);
+      padding: 12px 24px;
+      border-radius: var(--radius-md);
+      font-size: 0.9rem;
       font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+    }
+
+    .load-more-btn:active {
+      transform: scale(0.96);
+      background: var(--bg-card-hover);
+      border-color: var(--primary);
     }
 
     /* DEPARTURE LIST */
@@ -882,15 +896,10 @@
       <div class="autocomplete-list" id="autocompleteList"></div>
     </section>
 
-    <!-- CONTROLS & FILTER TABS -->
+    <!-- CONTROLS BAR -->
     <section class="controls-bar">
       <div class="current-station-title">
-        <span id="currentStationName">Kerava</span> lähtevät
-      </div>
-      <div class="filter-tabs">
-        <button class="filter-tab active" onclick="setFilter('COMMUTER', this)">Lähijunat</button>
-        <button class="filter-tab" onclick="setFilter('LONG', this)">Kauko</button>
-        <button class="filter-tab" onclick="setFilter('ALL', this)">Kaikki</button>
+        <span id="currentStationName">Kerava</span> — lähtevät lähijunat
       </div>
     </section>
 
@@ -987,8 +996,8 @@
     let allStations = [...STATIONS_DB];
     let currentStationCode = "KE";
     let currentStationName = "Kerava";
-    let currentCategoryFilter = "COMMUTER";
     let currentDeparturesData = [];
+    let departingCount = 40;
 
     // DOM Elements
     const searchInput = document.getElementById("searchInput");
@@ -1124,7 +1133,7 @@
       refreshBtn.classList.add("spinning");
 
       try {
-        const url = `https://rata.digitraffic.fi/api/v1/live-trains/station/${currentStationCode}?departing_trains=35`;
+        const url = `https://rata.digitraffic.fi/api/v1/live-trains/station/${currentStationCode}?departing_trains=${departingCount}&train_categories=Commuter`;
         const response = await fetch(url, {
           headers: { "Digitraffic-User": "FinnishTrainDepartures/1.0" }
         });
@@ -1150,7 +1159,7 @@
           departuresList.innerHTML = `
             <div class="empty-state">
               <p>⚠️ Virhe ladattaessa aikatauluja. Tarkista verkkoyhteys.</p>
-              <button class="filter-tab active" onclick="loadDepartures(true)">Yritä uudelleen</button>
+              <button class="retry-btn" onclick="loadDepartures(true)">Yritä uudelleen</button>
             </div>
           `;
           apiStatusText.innerText = "Yhteysvirhe";
@@ -1214,8 +1223,8 @@
       currentDeparturesData = [];
 
       trains.forEach(train => {
-        // Filter passenger categories
-        if (train.trainCategory !== "Commuter" && train.trainCategory !== "Long-distance") return;
+        // Filter passenger categories (Commuter trains only)
+        if (train.trainCategory !== "Commuter") return;
 
         // Find timetable row for current departing station
         const depRow = train.timeTableRows.find(
@@ -1237,12 +1246,7 @@
         const destStation = getStationName(destRow ? destRow.stationShortCode : "");
 
         // Train Line Code
-        let lineCode = train.commuterLineID;
-        let isCommuter = train.trainCategory === "Commuter";
-        if (!lineCode) {
-          lineCode = train.trainType;
-        }
-
+        const lineCode = train.commuterLineID || train.trainType;
         const unitCount = getTrainUnitsCount(train);
 
         currentDeparturesData.push({
@@ -1251,7 +1255,6 @@
           trainCategory: train.trainCategory,
           trainType: train.trainType,
           lineCode: lineCode,
-          isCommuter: isCommuter,
           destination: destStation,
           scheduledTime: scheduledTime,
           liveTime: liveTime,
@@ -1266,37 +1269,25 @@
       renderDepartures();
     }
 
-    // Render Filtered Departures
+    // Render Departures
     function renderDepartures() {
-      let filtered = currentDeparturesData;
-
-      if (currentCategoryFilter === "COMMUTER") {
-        filtered = filtered.filter(t => t.isCommuter);
-      } else if (currentCategoryFilter === "LONG") {
-        filtered = filtered.filter(t => !t.isCommuter);
-      }
-
-      if (filtered.length === 0) {
+      if (currentDeparturesData.length === 0) {
         departuresList.innerHTML = `
           <div class="empty-state">
-            <p>Ei lähteviä junia lähiaikoina tällä valinnalla.</p>
+            <p>Ei lähteviä lähijunia lähiaikoina.</p>
           </div>
         `;
         return;
       }
 
       let html = "";
-      filtered.forEach((t, idx) => {
+      currentDeparturesData.forEach((t, idx) => {
         const schedHM = formatHM(t.scheduledTime);
         const liveHM = formatHM(t.liveTime);
         const isDelayed = Math.round((t.liveTime - t.scheduledTime) / 60000) >= 2;
         const delayMins = Math.round((t.liveTime - t.scheduledTime) / 60000);
 
-        // Badge Class
-        let badgeClass = "badge-other";
-        if (t.isCommuter) badgeClass = "badge-commuter";
-        else if (t.trainType === "IC") badgeClass = "badge-ic";
-        else if (t.trainType === "S") badgeClass = "badge-pendolino";
+        const badgeClass = "badge-commuter";
 
         // Status Tag HTML
         let statusHtml = `<span class="status-tag status-ontime">Ajoissa</span>`;
@@ -1316,7 +1307,7 @@
                 <div class="train-info">
                   <div class="destination-name">${t.destination}</div>
                   <div class="train-meta-sub">
-                    <span>${t.isCommuter ? 'Lähijuna' : t.trainType + ' ' + t.trainNumber}</span>
+                    <span>Lähijuna</span>
                     <span class="track-pill">Raide ${t.track}</span>
                   </div>
                 </div>
@@ -1341,7 +1332,21 @@
         `;
       });
 
-      departuresList.innerHTML = html;
+      departuresList.innerHTML = html + `
+        <div class="load-more-wrapper">
+          <button class="load-more-btn" id="loadMoreBtn" onclick="loadMoreDepartures()">Lataa lisää junia</button>
+        </div>
+      `;
+    }
+
+    function loadMoreDepartures() {
+      const btn = document.getElementById("loadMoreBtn");
+      if (btn) {
+        btn.innerText = "Ladataan lisää...";
+        btn.disabled = true;
+      }
+      departingCount += 30;
+      loadDepartures(false);
     }
 
     // Live Dynamic Countdown Text (Seconds < 1 min, Minutes 1-50 min, Hours & Mins >= 60 min)
@@ -1393,6 +1398,7 @@
 
     // PRESET SELECTION (HELSINKI / KERAVA)
     function selectPreset(code, name) {
+      departingCount = 40;
       currentStationCode = code;
       currentStationName = name;
       currentStationTitle.innerText = name;
@@ -1444,6 +1450,7 @@
     }
 
     function selectStation(code, name) {
+      departingCount = 40;
       currentStationCode = code;
       currentStationName = name;
       currentStationTitle.innerText = name;
@@ -1466,13 +1473,7 @@
       autocompleteList.classList.remove("visible");
     }
 
-    // CATEGORY FILTERS
-    function setFilter(cat, btnEl) {
-      currentCategoryFilter = cat;
-      document.querySelectorAll(".filter-tab").forEach(b => b.classList.remove("active"));
-      btnEl.classList.add("active");
-      renderDepartures();
-    }
+
 
     // REFRESH BUTTON
     refreshBtn.addEventListener("click", () => {
@@ -1578,7 +1579,7 @@
         locationText = `${currentStationNameHere} ➔ ${nextStName}`;
       }
 
-      document.getElementById("modalTrainSubtitle").innerText = `${item.isCommuter ? 'Lähijuna' : train.trainType + ' ' + train.trainNumber} • ${stationsList.length} asemaa • Sijainti: ${locationText}`;
+      document.getElementById("modalTrainSubtitle").innerText = `Lähijuna • ${stationsList.length} asemaa • Sijainti: ${locationText}`;
 
       let html = "";
       stationsList.forEach(([stCode, stData], index) => {
