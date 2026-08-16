@@ -999,6 +999,10 @@
     let currentDeparturesData = [];
     let departingCount = 40;
 
+    // Train Compositions Cache State (15 min TTL)
+    const COMPOSITION_CACHE_TTL = 15 * 60 * 1000; // 15 minutes in ms
+    let compositionsMap = {}; // trainNumber -> unitCount (1, 2, or 3)
+
     // DOM Elements
     const searchInput = document.getElementById("searchInput");
     const clearSearchBtn = document.getElementById("clearSearchBtn");
@@ -1012,6 +1016,7 @@
 
     // Init App
     document.addEventListener("DOMContentLoaded", () => {
+      loadCachedCompositions();
       fetchStationsMetadata();
       selectPreset("KE", "Kerava");
 
@@ -1024,7 +1029,7 @@
       setInterval(updateCountdowns, 1000);
     });
 
-    // LocalStorage Caching Helpers for Helsinki & Kerava
+    // LocalStorage Caching Helpers for Helsinki & Kerava Departures
     function saveStationCache(code, trains) {
       if (code !== "HKI" && code !== "KE") return;
       try {
@@ -1047,6 +1052,90 @@
         console.warn("Could not read station cache from localStorage", e);
       }
       return null;
+    }
+
+    // Train Compositions LocalStorage Caching Helpers (15 min TTL)
+    function loadCachedCompositions() {
+      try {
+        const raw = localStorage.getItem("cache_compositions_data");
+        const ts = localStorage.getItem("cache_compositions_timestamp");
+        const date = localStorage.getItem("cache_compositions_date");
+        const todayStr = new Date().toISOString().slice(0, 10);
+
+        if (raw && ts && date === todayStr) {
+          const age = Date.now() - parseInt(ts, 10);
+          if (age < COMPOSITION_CACHE_TTL) {
+            compositionsMap = JSON.parse(raw);
+            return true; // Cache is fresh & valid (< 15 mins)
+          }
+        }
+      } catch (e) {
+        console.warn("Could not load compositions cache from localStorage", e);
+      }
+      return false;
+    }
+
+    function saveCachedCompositions(map) {
+      try {
+        const todayStr = new Date().toISOString().slice(0, 10);
+        localStorage.setItem("cache_compositions_data", JSON.stringify(map));
+        localStorage.setItem("cache_compositions_timestamp", Date.now().toString());
+        localStorage.setItem("cache_compositions_date", todayStr);
+      } catch (e) {
+        console.warn("Could not save compositions cache to localStorage", e);
+      }
+    }
+
+    // Fetch Daily Train Compositions from Digitraffic API
+    async function fetchDailyCompositions(force = false) {
+      if (!force && loadCachedCompositions()) {
+        return; // Fresh (< 15 min) compositions map is already active
+      }
+
+      try {
+        const todayStr = new Date().toISOString().slice(0, 10);
+        const response = await fetch(`https://rata.digitraffic.fi/api/v1/compositions/${todayStr}`, {
+          headers: {
+            "Digitraffic-User": "FinnishTrainDepartures/1.0",
+            "Accept": "application/json"
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const newMap = {};
+
+          data.forEach(c => {
+            const tNo = c.trainNumber;
+            const js = c.journeySections;
+            if (js && js.length > 0) {
+              const wagons = js[0].wagons || [];
+              const locos = js[0].locomotives || [];
+              const totalLength = js[0].totalLength || 0;
+
+              let unitCount = 0;
+              if (wagons.length > 0) {
+                unitCount = wagons.length;
+              } else if (locos.length > 0) {
+                unitCount = locos.length;
+              } else if (totalLength > 0) {
+                unitCount = Math.round(totalLength / 75);
+              }
+
+              if (unitCount > 0) {
+                newMap[tNo] = Math.min(Math.max(unitCount, 1), 3);
+              }
+            }
+          });
+
+          if (Object.keys(newMap).length > 0) {
+            compositionsMap = newMap;
+            saveCachedCompositions(newMap);
+          }
+        }
+      } catch (err) {
+        console.warn("Compositions fetch failed, fallback to memory/defaults", err);
+      }
     }
 
     // Station Metadata Caching Helpers (Daily 24h Refresh)
@@ -1133,14 +1222,19 @@
       refreshBtn.classList.add("spinning");
 
       try {
-        const url = `https://rata.digitraffic.fi/api/v1/live-trains/station/${currentStationCode}?departing_trains=${departingCount}&train_categories=Commuter`;
-        const response = await fetch(url, {
+        const departuresUrl = `https://rata.digitraffic.fi/api/v1/live-trains/station/${currentStationCode}?departing_trains=${departingCount}&train_categories=Commuter`;
+        
+        // Fetch departures and composition sync in parallel for zero perceived latency
+        const departuresPromise = fetch(departuresUrl, {
           headers: { "Digitraffic-User": "FinnishTrainDepartures/1.0" }
+        }).then(res => {
+          if (!res.ok) throw new Error("API virhe");
+          return res.json();
         });
 
-        if (!response.ok) throw new Error("API virhe");
+        const compositionsPromise = fetchDailyCompositions(false);
 
-        const trains = await response.json();
+        const [trains] = await Promise.all([departuresPromise, compositionsPromise]);
 
         // Save fresh response to localStorage cache for Helsinki / Kerava
         saveStationCache(currentStationCode, trains);
@@ -1174,20 +1268,26 @@
     function getTrainUnitsCount(train) {
       if (!train || train.trainCategory !== "Commuter") return 0;
 
+      // 1. Check synced compositions map (from 15min localStorage cache / Digitraffic API)
+      if (compositionsMap && compositionsMap[train.trainNumber] !== undefined) {
+        return compositionsMap[train.trainNumber];
+      }
+
+      // 2. Check embedded compositions if present in raw train object
       if (train.compositions && train.compositions.length > 0) {
         try {
           const comp = train.compositions[0];
           if (comp && comp.journeySections && comp.journeySections.length > 0) {
             const wagons = comp.journeySections[0].wagons;
             if (wagons && wagons.length > 0) {
-              if (wagons.length <= 2) return 1;
-              if (wagons.length <= 4) return 2;
-              return 3;
+              return Math.min(Math.max(wagons.length, 1), 3);
             }
           }
         } catch (e) {}
       }
-      return 2; // Default 2 units for commuter trains
+
+      // 3. Fallback default for commuter trains
+      return 1;
     }
 
     // Render Composition SVG Only (No Text) for card footer with 3px gap
@@ -1477,6 +1577,7 @@
 
     // REFRESH BUTTON
     refreshBtn.addEventListener("click", () => {
+      fetchDailyCompositions(true); // Force-refresh compositions on manual tap
       loadDepartures(true);
     });
 
